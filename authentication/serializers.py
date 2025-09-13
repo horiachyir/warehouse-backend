@@ -17,17 +17,12 @@ class UserRegistrationSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, min_length=6)
     confirmPassword = serializers.CharField(write_only=True)
     date = serializers.DateTimeField(required=True)
-    visitReason = serializers.CharField(required=True)
+    visitReason = serializers.CharField(required=False, allow_blank=True)
 
     def validate(self, attrs):
         # Check if passwords match
         if attrs['password'] != attrs['confirmPassword']:
             raise serializers.ValidationError("Passwords don't match")
-
-        # Validate visit reason
-        valid_reasons = ['employee', 'visitor', 'contractor', 'delivery', 'other']
-        if attrs['visitReason'] not in valid_reasons:
-            raise serializers.ValidationError(f"Invalid visit reason. Must be one of: {', '.join(valid_reasons)}")
 
         return attrs
 
@@ -43,11 +38,14 @@ class UserRegistrationSerializer(serializers.Serializer):
             username = f"{base_username}{counter}"
             counter += 1
 
+        # Get visit reason or default to 'customer'
+        visit_reason = validated_data.get('visitReason', 'customer')
+
         # Create the user
         user = CustomUser(
             username=username,
             email=email,
-            visit_reason=validated_data['visitReason'],
+            visit_reason=visit_reason,
             visit_date=validated_data['date']
         )
         user.set_password(validated_data['password'])
