@@ -47,10 +47,20 @@ def login_view(request):
     if serializer.is_valid():
         user = serializer.validated_data['user']
         refresh = RefreshToken.for_user(user)
-        
+
+        # Prepare user data to return
+        user_data = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'visit_reason': user.visit_reason,
+            'visit_date': user.visit_date.isoformat() if user.visit_date else None,
+            'created_at': user.created_at.isoformat() if user.created_at else None,
+        }
+
         return Response({
             'message': 'Login successful',
-            'user': UserSerializer(user).data,
+            'user': user_data,
             'tokens': {
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
