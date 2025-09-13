@@ -14,9 +14,9 @@ DEBUG = True
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 # Always include Render domains
 render_domains = [
-    'travelbook-backend.onrender.com',
+    'warehouse-backend-ax8l.onrender.com',
     '.onrender.com',  # Wildcard for any onrender.com subdomain
-    '.travelbook-backend.onrender.com'  # Wildcard for any subdomain
+    '.warehouse-backend-ax8l.onrender.com'  # Wildcard for any subdomain
 ]
 for domain in render_domains:
     if domain not in ALLOWED_HOSTS:
