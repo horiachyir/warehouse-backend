@@ -16,7 +16,8 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(','
 render_domains = [
     'warehouse-backend-ax8l.onrender.com',
     '.onrender.com',  # Wildcard for any onrender.com subdomain
-    '.warehouse-backend-ax8l.onrender.com'  # Wildcard for any subdomain
+    '.warehouse-backend-ax8l.onrender.com',  # Wildcard for any subdomain
+    'testserver'  # For Django testing
 ]
 for domain in render_domains:
     if domain not in ALLOWED_HOSTS:
@@ -139,6 +140,9 @@ STATICFILES_DIRS = [BASE_DIR / 'static'] if os.path.exists(BASE_DIR / 'static') 
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Allow URLs without trailing slash
+APPEND_SLASH = False
 
 # Django REST Framework Configuration
 REST_FRAMEWORK = {
