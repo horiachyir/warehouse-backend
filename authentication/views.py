@@ -17,13 +17,23 @@ class RegisterView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        
+
         # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
-        
+
+        # Prepare user data to return
+        user_data = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'visit_reason': user.visit_reason,
+            'visit_date': user.visit_date.isoformat() if user.visit_date else None,
+            'created_at': user.created_at.isoformat() if user.created_at else None,
+        }
+
         return Response({
             'message': 'User registered successfully',
-            'user': UserSerializer(user).data,
+            'user': user_data,
             'tokens': {
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),

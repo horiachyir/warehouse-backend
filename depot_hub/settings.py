@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'drf_spectacular',
     'authentication',
@@ -228,7 +229,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8080",
     "http://localhost:8080",
     "http://localhost:8081",
-    "https://safety-station.vercel.app"
+    "https://safety-station.vercel.app",
+    "https://warehouse-backend-ax8l.onrender.com"
 ]
 
 CORS_ALLOW_METHODS = [

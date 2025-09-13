@@ -1,34 +1,56 @@
 from rest_framework import serializers
 from django.contrib.auth import authenticate
+from django.utils import timezone
+from datetime import datetime
 from .models import CustomUser
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email', 'first_name', 'last_name', 
-                 'employee_id', 'phone', 'department', 'role', 'date_joined']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name',
+                 'employee_id', 'phone', 'department', 'role', 'visit_reason',
+                 'visit_date', 'date_joined']
         read_only_fields = ['id', 'date_joined']
 
-class UserRegistrationSerializer(serializers.ModelSerializer):
+class UserRegistrationSerializer(serializers.Serializer):
+    email = serializers.EmailField(required=True)
     password = serializers.CharField(write_only=True, min_length=6)
-    password_confirm = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = CustomUser
-        fields = ['username', 'email', 'first_name', 'last_name', 
-                 'employee_id', 'phone', 'department', 'role', 
-                 'password', 'password_confirm']
+    confirmPassword = serializers.CharField(write_only=True)
+    date = serializers.DateTimeField(required=True)
+    visitReason = serializers.CharField(required=True)
 
     def validate(self, attrs):
-        if attrs['password'] != attrs['password_confirm']:
+        # Check if passwords match
+        if attrs['password'] != attrs['confirmPassword']:
             raise serializers.ValidationError("Passwords don't match")
+
+        # Validate visit reason
+        valid_reasons = ['employee', 'visitor', 'contractor', 'delivery', 'other']
+        if attrs['visitReason'] not in valid_reasons:
+            raise serializers.ValidationError(f"Invalid visit reason. Must be one of: {', '.join(valid_reasons)}")
+
         return attrs
 
     def create(self, validated_data):
-        validated_data.pop('password_confirm', None)
-        password = validated_data.pop('password')
-        user = CustomUser(**validated_data)
-        user.set_password(password)
+        # Extract email to use as username
+        email = validated_data['email']
+        username = email.split('@')[0]  # Use email prefix as username
+
+        # Check if username already exists and make it unique if necessary
+        base_username = username
+        counter = 1
+        while CustomUser.objects.filter(username=username).exists():
+            username = f"{base_username}{counter}"
+            counter += 1
+
+        # Create the user
+        user = CustomUser(
+            username=username,
+            email=email,
+            visit_reason=validated_data['visitReason'],
+            visit_date=validated_data['date']
+        )
+        user.set_password(validated_data['password'])
         user.save()
         return user
 
