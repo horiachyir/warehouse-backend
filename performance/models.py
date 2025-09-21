@@ -1,7 +1,4 @@
 from django.db import models
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
 
 class PerformanceMetric(models.Model):
     METRIC_TYPE_CHOICES = [
@@ -26,7 +23,7 @@ class PerformanceMetric(models.Model):
     unit = models.CharField(max_length=20, blank=True)
     period = models.CharField(max_length=10, choices=PERIOD_CHOICES, default='monthly')
     date = models.DateField()
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='performance_metrics')
+    created_by = models.CharField(max_length=100, blank=True, help_text='Name of creator')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)
@@ -70,10 +67,10 @@ class DashboardData(models.Model):
 
 class StaffLocation(models.Model):
     """Model to track staff current location in depot"""
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='current_location')
+    user_name = models.CharField(max_length=100, help_text='Staff member name')
     location = models.CharField(max_length=100)
     updated_at = models.DateTimeField(auto_now=True)
     is_in_depot = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.location}"
+        return f"{self.user_name} - {self.location}"

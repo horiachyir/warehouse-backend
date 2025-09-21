@@ -1,7 +1,4 @@
 from django.db import models
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
 
 class Document(models.Model):
     CATEGORY_CHOICES = [
@@ -25,7 +22,7 @@ class Document(models.Model):
     document_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
     file = models.FileField(upload_to='documents/%Y/%m/')
     file_size = models.PositiveIntegerField(help_text='File size in bytes')
-    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_documents')
+    uploaded_by = models.CharField(max_length=100, blank=True, help_text='Name of uploader')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_active = models.BooleanField(default=True)

@@ -1,7 +1,4 @@
 from django.db import models
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
 
 class NewsItem(models.Model):
     CATEGORY_CHOICES = [
@@ -23,7 +20,7 @@ class NewsItem(models.Model):
     content = models.TextField(blank=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='news_articles')
+    author = models.CharField(max_length=100, blank=True, help_text='Author name')
     is_published = models.BooleanField(default=True)
     published_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -53,7 +50,7 @@ class Video(models.Model):
     video_url = models.URLField(blank=True, help_text='External video URL (YouTube, Vimeo, etc.)')
     video_file = models.FileField(upload_to='videos/', null=True, blank=True, help_text='Local video file')
     duration = models.DurationField(null=True, blank=True)
-    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='uploaded_videos')
+    uploaded_by = models.CharField(max_length=100, blank=True, help_text='Uploader name')
     is_featured = models.BooleanField(default=False)
     view_count = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)

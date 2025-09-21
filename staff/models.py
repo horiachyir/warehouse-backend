@@ -1,7 +1,4 @@
 from django.db import models
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
 
 class CheckInRecord(models.Model):
     STATUS_CHOICES = [
@@ -9,7 +6,7 @@ class CheckInRecord(models.Model):
         ('checked-out', 'Checked Out'),
     ]
     
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='checkin_records')
+    # Removed user field - check-ins are now tracked by employee_id only
     employee_id = models.CharField(max_length=20)
     name = models.CharField(max_length=100)
     check_in_time = models.DateTimeField(null=True, blank=True)
