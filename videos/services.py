@@ -12,43 +12,22 @@ logger = logging.getLogger(__name__)
 class YouTubeService:
     """Service class for interacting with YouTube Data API v3"""
 
-    CHANNEL_USERNAME = "RhombergSersaRailGroup"
+    CHANNEL_HANDLE = "@RhombergSersaRailGroup"
     CHANNEL_URL = "https://www.youtube.com/@RhombergSersaRailGroup"
 
     def __init__(self):
         self.api_key = settings.YOUTUBE_API_KEY
+        self.channel_id = settings.YOUTUBE_CHANNEL_ID
         self.youtube = build('youtube', 'v3', developerKey=self.api_key)
 
     def get_channel_id(self) -> Optional[str]:
-        """Get the channel ID from the channel username"""
-        try:
-            request = self.youtube.channels().list(
-                part='id',
-                forUsername=self.CHANNEL_USERNAME
-            )
-            response = request.execute()
+        """Get the channel ID - now directly from settings"""
+        if self.channel_id:
+            logger.info(f"Using channel ID from settings: {self.channel_id}")
+            return self.channel_id
 
-            if response['items']:
-                return response['items'][0]['id']
-            else:
-                # Try with custom URL handle
-                request = self.youtube.search().list(
-                    part='snippet',
-                    q=self.CHANNEL_USERNAME,
-                    type='channel',
-                    maxResults=1
-                )
-                response = request.execute()
-
-                if response['items']:
-                    return response['items'][0]['snippet']['channelId']
-
-            logger.error(f"Channel not found: {self.CHANNEL_USERNAME}")
-            return None
-
-        except HttpError as e:
-            logger.error(f"Error getting channel ID: {e}")
-            return None
+        logger.error("No channel ID found in settings")
+        return None
 
     def get_channel_videos(self, max_results: int = 50) -> List[Dict]:
         """Fetch videos from the Rhomberg Sersa Rail Group channel"""
@@ -219,6 +198,41 @@ class RhombergVideoManager:
     def get_cached_videos(self) -> List[RhombergVideo]:
         """Get videos from database cache"""
         return RhombergVideo.objects.filter(is_active=True).order_by('-published_at')
+
+    def has_todays_data(self) -> bool:
+        """Check if we have videos fetched today"""
+        today = timezone.now().date()
+        today_start = timezone.make_aware(datetime.combine(today, datetime.min.time()))
+        today_end = timezone.make_aware(datetime.combine(today, datetime.max.time()))
+
+        return RhombergVideo.objects.filter(
+            fetched_at__gte=today_start,
+            fetched_at__lte=today_end,
+            is_active=True
+        ).exists()
+
+    def get_videos_for_list_endpoint(self) -> Dict[str, any]:
+        """Get videos for /api/youtube/list/ endpoint with today's caching logic"""
+        if self.has_todays_data():
+            # Return today's cached data
+            videos = self.get_cached_videos()
+            return {
+                'success': True,
+                'message': f'Retrieved {videos.count()} videos from today\'s cache',
+                'videos': list(videos.values()),
+                'from_cache': True,
+                'fetched_today': True
+            }
+        else:
+            # Fetch fresh data from YouTube
+            result = self.fetch_and_store_videos()
+            if result['success']:
+                # Return the fresh data
+                videos = self.get_cached_videos()
+                result['videos'] = list(videos.values())
+                result['from_cache'] = False
+                result['fetched_today'] = True
+            return result
 
     def get_videos(self, force_refresh: bool = False) -> Dict[str, any]:
         """Get videos with smart caching logic"""

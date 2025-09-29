@@ -1,6 +1,6 @@
 import logging
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
@@ -123,3 +123,65 @@ class VideoFetchLogViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = VideoFetchLog.objects.all().order_by('-fetch_date')
     serializer_class = VideoFetchLogSerializer
     permission_classes = [AllowAny]
+
+
+@extend_schema(
+    summary="Get YouTube video list",
+    description="Get Rhomberg videos with smart caching - returns today's cache if available, otherwise fetches fresh data from YouTube",
+    tags=["YouTube"],
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "success": {"type": "boolean"},
+                "message": {"type": "string"},
+                "videos": {"type": "array", "items": {"$ref": "#/components/schemas/RhombergVideo"}},
+                "from_cache": {"type": "boolean"},
+                "fetched_today": {"type": "boolean"},
+                "total_videos": {"type": "integer"}
+            }
+        },
+        400: {
+            "type": "object",
+            "properties": {
+                "success": {"type": "boolean"},
+                "error": {"type": "string"}
+            }
+        }
+    }
+)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def youtube_list(request):
+    """
+    API endpoint for /api/youtube/list/
+
+    If rhomberg_videos table contains data loaded today, return cached data.
+    If not, fetch fresh data from YouTube API.
+    """
+    try:
+        manager = RhombergVideoManager()
+        result = manager.get_videos_for_list_endpoint()
+
+        if result['success']:
+            return Response({
+                'success': True,
+                'message': result['message'],
+                'videos': result['videos'],
+                'from_cache': result.get('from_cache', False),
+                'fetched_today': result.get('fetched_today', False),
+                'total_videos': len(result['videos']),
+                'videos_updated': result.get('videos_updated', 0)
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'success': False,
+                'error': result['message']
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    except Exception as e:
+        logger.error(f"Error in youtube_list endpoint: {e}")
+        return Response({
+            'success': False,
+            'error': 'Internal server error while getting YouTube videos'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

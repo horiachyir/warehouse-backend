@@ -19,6 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
+from videos.views import youtube_list
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +28,8 @@ urlpatterns = [
     path('api/news/', include('news.urls')),
     path('api/performance/', include('performance.urls')),
     path('api/videos/', include('videos.urls')),
+    # YouTube specific endpoint
+    path('api/youtube/list/', youtube_list, name='youtube-list'),
     # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

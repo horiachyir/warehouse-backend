@@ -239,3 +239,4 @@ GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET', default='')
 
 # YouTube API
 YOUTUBE_API_KEY = config('YOUTUBE_API_KEY', default='')
+YOUTUBE_CHANNEL_ID = config('CHANNEL_ID', default='')
