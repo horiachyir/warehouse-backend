@@ -9,3 +9,5 @@ python-dateutil==2.9.0.post0
 gunicorn==22.0.0
 whitenoise==6.5.0
 drf-spectacular==0.27.2
+google-api-python-client==2.145.0
+requests==2.31.0

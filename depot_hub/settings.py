@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'documents',
     'news',
     'performance',
+    'videos',
 ]
 
 MIDDLEWARE = [
@@ -235,3 +236,6 @@ FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:5173')
 # Google OAuth
 GOOGLE_CLIENT_ID = config('GOOGLE_CLIENT_ID', default='')
 GOOGLE_CLIENT_SECRET = config('GOOGLE_CLIENT_SECRET', default='')
+
+# YouTube API
+YOUTUBE_API_KEY = config('YOUTUBE_API_KEY', default='')
