@@ -141,3 +141,33 @@ def depot_checkin(request):
             'success': False,
             'errors': serializer.errors
         }, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def depot_checkout(request, record_id):
+    """Check out a visitor from the depot"""
+    try:
+        record = CheckInRecord.objects.get(id=record_id)
+    except CheckInRecord.DoesNotExist:
+        return Response({
+            'success': False,
+            'error': 'Check-in record not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+    # Check if already checked out
+    if record.status == 'checked-out':
+        return Response({
+            'success': False,
+            'error': 'This visitor is already checked out'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Update record with check-out time
+    record.check_out_time = timezone.now()
+    record.status = 'checked-out'
+    record.save()
+
+    return Response({
+        'success': True,
+        'message': f'Check-out successful for {record.name}',
+        'record': CheckInRecordSerializer(record).data
+    })
