@@ -127,7 +127,7 @@ class VideoFetchLogViewSet(viewsets.ReadOnlyModelViewSet):
 
 @extend_schema(
     summary="Get YouTube video list",
-    description="Get Rhomberg videos with smart caching - returns today's cache if available, otherwise fetches fresh data from YouTube",
+    description="Get Rhomberg videos with caching - returns cached data if available, otherwise fetches fresh data from YouTube",
     tags=["YouTube"],
     responses={
         200: {
@@ -137,7 +137,6 @@ class VideoFetchLogViewSet(viewsets.ReadOnlyModelViewSet):
                 "message": {"type": "string"},
                 "videos": {"type": "array", "items": {"$ref": "#/components/schemas/RhombergVideo"}},
                 "from_cache": {"type": "boolean"},
-                "fetched_today": {"type": "boolean"},
                 "total_videos": {"type": "integer"}
             }
         },
@@ -156,7 +155,7 @@ def youtube_list(request):
     """
     API endpoint for /api/youtube/list/
 
-    If rhomberg_videos table contains data loaded today, return cached data.
+    If rhomberg_videos table contains data, return cached data.
     If not, fetch fresh data from YouTube API.
     """
     try:
@@ -164,13 +163,17 @@ def youtube_list(request):
         result = manager.get_videos_for_list_endpoint()
 
         if result['success']:
+            # Exclude description field from videos
+            videos = result['videos']
+            for video in videos:
+                video.pop('description', None)
+
             return Response({
                 'success': True,
                 'message': result['message'],
-                'videos': result['videos'],
+                'videos': videos,
                 'from_cache': result.get('from_cache', False),
-                'fetched_today': result.get('fetched_today', False),
-                'total_videos': len(result['videos']),
+                'total_videos': len(videos),
                 'videos_updated': result.get('videos_updated', 0)
             }, status=status.HTTP_200_OK)
         else:

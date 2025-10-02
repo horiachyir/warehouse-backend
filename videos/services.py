@@ -99,7 +99,6 @@ class YouTubeService:
             return {
                 'video_id': video['id'],
                 'title': snippet['title'],
-                'description': snippet['description'],
                 'thumbnail_url': snippet['thumbnails'].get('high', {}).get('url', ''),
                 'video_url': f"https://www.youtube.com/watch?v={video['id']}",
                 'duration': content_details.get('duration', ''),
@@ -212,26 +211,25 @@ class RhombergVideoManager:
         ).exists()
 
     def get_videos_for_list_endpoint(self) -> Dict[str, any]:
-        """Get videos for /api/youtube/list/ endpoint with today's caching logic"""
-        if self.has_todays_data():
-            # Return today's cached data
+        """Get videos for /api/youtube/list/ endpoint - returns cached data if available, otherwise fetches from YouTube"""
+        # Check if table has any data
+        if RhombergVideo.objects.exists():
+            # Return cached data without fetching from YouTube
             videos = self.get_cached_videos()
             return {
                 'success': True,
-                'message': f'Retrieved {videos.count()} videos from today\'s cache',
+                'message': f'Retrieved {videos.count()} videos from cache',
                 'videos': list(videos.values()),
-                'from_cache': True,
-                'fetched_today': True
+                'from_cache': True
             }
         else:
-            # Fetch fresh data from YouTube
+            # Fetch fresh data from YouTube only if table is empty
             result = self.fetch_and_store_videos()
             if result['success']:
                 # Return the fresh data
                 videos = self.get_cached_videos()
                 result['videos'] = list(videos.values())
                 result['from_cache'] = False
-                result['fetched_today'] = True
             return result
 
     def get_videos(self, force_refresh: bool = False) -> Dict[str, any]:

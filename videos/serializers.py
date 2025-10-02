@@ -10,7 +10,6 @@ class RhombergVideoSerializer(serializers.ModelSerializer):
             'id',
             'video_id',
             'title',
-            'description',
             'thumbnail_url',
             'video_url',
             'duration',
