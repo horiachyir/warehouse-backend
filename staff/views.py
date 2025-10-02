@@ -98,32 +98,46 @@ def staff_status(request):
     serializer = CheckInRecordSerializer(list(employee_status.values()), many=True)
     return Response(serializer.data)
 
-@api_view(['POST'])
+@api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
 def depot_checkin(request):
-    """Check in a visitor to the depot"""
-    serializer = DepotCheckInSerializer(data=request.data)
-    if serializer.is_valid():
-        company = serializer.validated_data['company']
-        name = serializer.validated_data['name']
-        reason = serializer.validated_data['reason']
-
-        # Create new check-in record
-        record = CheckInRecord.objects.create(
-            company=company,
-            name=name,
-            reason=reason,
-            check_in_time=timezone.now(),
-            status='checked-in'
-        )
-
+    """
+    GET: Get list of checked-in visitors
+    POST: Check in a visitor to the depot
+    """
+    if request.method == 'GET':
+        # Get all currently checked-in visitors
+        checked_in_records = CheckInRecord.objects.filter(status='checked-in').order_by('-check_in_time')
+        serializer = CheckInRecordSerializer(checked_in_records, many=True)
         return Response({
             'success': True,
-            'message': f'Check-in successful for {name}',
-            'record': CheckInRecordSerializer(record).data
-        }, status=status.HTTP_201_CREATED)
+            'count': checked_in_records.count(),
+            'records': serializer.data
+        })
 
-    return Response({
-        'success': False,
-        'errors': serializer.errors
-    }, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'POST':
+        serializer = DepotCheckInSerializer(data=request.data)
+        if serializer.is_valid():
+            company = serializer.validated_data['company']
+            name = serializer.validated_data['name']
+            reason = serializer.validated_data['reason']
+
+            # Create new check-in record
+            record = CheckInRecord.objects.create(
+                company=company,
+                name=name,
+                reason=reason,
+                check_in_time=timezone.now(),
+                status='checked-in'
+            )
+
+            return Response({
+                'success': True,
+                'message': f'Check-in successful for {name}',
+                'record': CheckInRecordSerializer(record).data
+            }, status=status.HTTP_201_CREATED)
+
+        return Response({
+            'success': False,
+            'errors': serializer.errors
+        }, status=status.HTTP_400_BAD_REQUEST)

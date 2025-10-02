@@ -6,4 +6,5 @@ urlpatterns = [
     path('checkin/', views.check_in, name='check_in'),
     path('checkout/', views.check_out, name='check_out'),
     path('status/', views.staff_status, name='staff_status'),
+    path('depot/checkin/', views.depot_checkin, name='depot_checkin'),
 ]
