@@ -122,12 +122,11 @@ def depot_checkin(request):
             name = serializer.validated_data['name']
             reason = serializer.validated_data['reason']
 
-            # Check if a record with the same name, company, and reason already exists
+            # Check if a record with the same name, company, and reason already exists (regardless of status)
             existing_record = CheckInRecord.objects.filter(
                 company=company,
                 name=name,
-                reason=reason,
-                status='checked-in'
+                reason=reason
             ).first()
 
             if existing_record:
