@@ -102,16 +102,16 @@ def staff_status(request):
 @permission_classes([AllowAny])
 def depot_checkin(request):
     """
-    GET: Get list of checked-in visitors
+    GET: Get all check-in records (both checked-in and checked-out)
     POST: Check in a visitor to the depot
     """
     if request.method == 'GET':
-        # Get all currently checked-in visitors
-        checked_in_records = CheckInRecord.objects.filter(status='checked-in').order_by('-check_in_time')
-        serializer = CheckInRecordSerializer(checked_in_records, many=True)
+        # Get all check-in records
+        all_records = CheckInRecord.objects.all().order_by('-created_at')
+        serializer = CheckInRecordSerializer(all_records, many=True)
         return Response({
             'success': True,
-            'count': checked_in_records.count(),
+            'count': all_records.count(),
             'records': serializer.data
         })
 
@@ -121,6 +121,20 @@ def depot_checkin(request):
             company = serializer.validated_data['company']
             name = serializer.validated_data['name']
             reason = serializer.validated_data['reason']
+
+            # Check if a record with the same name, company, and reason already exists
+            existing_record = CheckInRecord.objects.filter(
+                company=company,
+                name=name,
+                reason=reason,
+                status='checked-in'
+            ).first()
+
+            if existing_record:
+                return Response({
+                    'success': False,
+                    'error': 'You are aleady registered!'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             # Create new check-in record
             record = CheckInRecord.objects.create(
