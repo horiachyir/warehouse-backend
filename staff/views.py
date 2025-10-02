@@ -1,10 +1,11 @@
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.utils import timezone
 from django.db.models import Q
 from .models import CheckInRecord
-from .serializers import CheckInRecordSerializer, CheckInSerializer, CheckOutSerializer
+from .serializers import CheckInRecordSerializer, CheckInSerializer, CheckOutSerializer, DepotCheckInSerializer
 
 @api_view(['GET'])
 def checkin_records(request):
@@ -87,12 +88,42 @@ def staff_status(request):
     """Get current staff status (who's checked in/out today)"""
     today = timezone.now().date()
     records = CheckInRecord.objects.filter(created_at__date=today).order_by('-created_at')
-    
+
     # Get latest record for each employee
     employee_status = {}
     for record in records:
         if record.employee_id not in employee_status:
             employee_status[record.employee_id] = record
-    
+
     serializer = CheckInRecordSerializer(list(employee_status.values()), many=True)
     return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def depot_checkin(request):
+    """Check in a visitor to the depot"""
+    serializer = DepotCheckInSerializer(data=request.data)
+    if serializer.is_valid():
+        company = serializer.validated_data['company']
+        name = serializer.validated_data['name']
+        reason = serializer.validated_data['reason']
+
+        # Create new check-in record
+        record = CheckInRecord.objects.create(
+            company=company,
+            name=name,
+            reason=reason,
+            check_in_time=timezone.now(),
+            status='checked-in'
+        )
+
+        return Response({
+            'success': True,
+            'message': f'Check-in successful for {name}',
+            'record': CheckInRecordSerializer(record).data
+        }, status=status.HTTP_201_CREATED)
+
+    return Response({
+        'success': False,
+        'errors': serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)

@@ -67,8 +67,8 @@ class DashboardData(models.Model):
 
 class StaffLocation(models.Model):
     """Model to track staff current location in depot"""
-    user_name = models.CharField(max_length=100, help_text='Staff member name')
-    location = models.CharField(max_length=100)
+    user_name = models.CharField(max_length=100, help_text='Staff member name', default='Unknown')
+    location = models.CharField(max_length=100, default='Unknown')
     updated_at = models.DateTimeField(auto_now=True)
     is_in_depot = models.BooleanField(default=True)
 
