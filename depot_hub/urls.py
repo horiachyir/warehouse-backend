@@ -20,7 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from videos.views import youtube_list
-from staff.views import depot_checkin, depot_checkout
+from staff.views import depot_checkin, depot_checkout, depot_recheckin
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -34,6 +34,7 @@ urlpatterns = [
     # Depot specific endpoints
     path('api/depot/checkin/', depot_checkin, name='depot-checkin'),
     path('api/depot/checkin/<int:record_id>/checkout/', depot_checkout, name='depot-checkout'),
+    path('api/depot/checkin/<int:record_id>/checkin/', depot_recheckin, name='depot-recheckin'),
     # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

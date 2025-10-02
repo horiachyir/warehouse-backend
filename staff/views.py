@@ -184,3 +184,33 @@ def depot_checkout(request, record_id):
         'message': f'Check-out successful for {record.name}',
         'record': CheckInRecordSerializer(record).data
     })
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def depot_recheckin(request, record_id):
+    """Re-check in a visitor who was previously checked out"""
+    try:
+        record = CheckInRecord.objects.get(id=record_id)
+    except CheckInRecord.DoesNotExist:
+        return Response({
+            'success': False,
+            'error': 'Check-in record not found'
+        }, status=status.HTTP_404_NOT_FOUND)
+
+    # Check if already checked in
+    if record.status == 'checked-in':
+        return Response({
+            'success': False,
+            'error': 'This visitor is already checked in'
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    # Update record to checked-in status
+    record.check_in_time = timezone.now()
+    record.status = 'checked-in'
+    record.save()
+
+    return Response({
+        'success': True,
+        'message': f'Re-check-in successful for {record.name}',
+        'record': CheckInRecordSerializer(record).data
+    })
